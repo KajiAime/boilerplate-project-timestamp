@@ -2,6 +2,7 @@
 // where your node app starts
 
 // init project
+var url = require('url');
 var express = require('express');
 var app = express();
 
@@ -20,11 +21,31 @@ app.get("/", function (req, res) {
 
 
 // your first API endpoint... 
-app.get("/api/hello", function (req, res) {
-  res.json({greeting: 'hello API'});
+app.get("/api/", function (req, res) {
+  const time = new Date();
+  res.json({unix: Date.UTC(time.getUTCFullYear(), time.getUTCMonth(), time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), time.getUTCMilliseconds()), utc: time.toUTCString()});
 });
 
+app.get(/^\/api\/[-]?[0-9]+$/, function (req, res) {
+  const link = url.parse(req.url, true);
+  const newUnix = link.pathname.split("/")[2]-0;
+  if(/[-]?[0-9]{1,16}$/.test(link.pathname) && newUnix >= -8640000000000000 && newUnix <= 8640000000000000){
+    const time = new Date(newUnix);
+    res.json({unix: newUnix, utc: time.toUTCString()});
+  } else {
+    res.json({error: "Invalid Date"});
+  }
+});
 
+app.get("/api/:date?", function (req, res) {
+  const link = url.parse(req.url, true);
+  if(/([0-9]+-([0][1-9]|[1][0-2])-([0]?[1-9]|[1-2][0-9]|[3][0-1])$|([0][1-9]|[1][0-2])+-([0]?[1-9]|[1-2][0-9]|[3][0-1])-[0-9]+$)/.test(link.pathname)) {
+    const time = new Date(link.pathname.split("/")[2]);
+    res.json({unix: Date.UTC(time.getUTCFullYear(), time.getUTCMonth(), time.getUTCDate(), time.getUTCHours(), time.getUTCMinutes(), time.getUTCSeconds(), time.getUTCMilliseconds()), utc: time.toUTCString()});
+  } else {
+    res.json({error: "Invalid Date"});
+  }
+});
 
 // listen for requests :)
 var listener = app.listen(process.env.PORT, function () {
