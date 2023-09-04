@@ -38,11 +38,7 @@ app.get(/^\/api\/[-]?[0-9]+$/, function (req, res) {
 });
 
 app.get("/api/:date?", function (req, res) {
-  const link = url.parse(req.url, true);
-  let rawDate = link.pathname.split("/")[2];
-  if(/[0-9]+-([0]?[1-9]|[1][0-2])-([0]?[1-9]|[1-2][0-9]|[3][0-1])$/.test(rawDate)){
-    rawDate += "T00:00:00Z";
-  }
+  let rawDate = req.params.date;
   const time = new Date(rawDate);
   if (time.toUTCString() === "Invalid Date") {
     res.json({error: "Invalid Date"});
